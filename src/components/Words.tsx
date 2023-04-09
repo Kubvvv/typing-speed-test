@@ -1,8 +1,9 @@
 import { EuiFlexGroup, EuiText } from "@elastic/eui";
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { WordState } from "../App";
 
 interface WordsProps {
-  words: string[];
+  words: WordState[];
   wordIndex: number;
   mistake: boolean;
 }
@@ -10,28 +11,33 @@ interface WordsProps {
 const Words: React.FC<WordsProps> = ({ wordIndex, words, mistake }) => {
   return (
     <EuiFlexGroup
-      css={{
-        display: "flex",
+      style={{
         maxWidth: "70%",
         flexDirection: "row",
         gap: 10,
         background: "white",
         flexWrap: "wrap",
         color: "black",
+        padding: 10,
       }}
     >
       {words.map((word, i) => {
-        if (wordIndex === i && mistake) {
-          return <EuiText css={{ background: "red" }}>{word}</EuiText>;
+        if ((wordIndex === i && mistake) || word.state === "fail") {
+          return (
+            <EuiText key={`wrong-${i}`} style={{ background: "red" }}>
+              {word.word}
+            </EuiText>
+          );
         } else {
           return (
             <EuiText
-              css={{
+              key={`good-${i}`}
+              style={{
                 background: i === wordIndex ? "gray" : "white",
-                color: wordIndex > i ? "green" : "black",
+                color: word.state === "ok" ? "green" : "black",
               }}
             >
-              {word}
+              {word.word}
             </EuiText>
           );
         }

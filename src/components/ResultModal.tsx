@@ -28,11 +28,16 @@ const ResultModal: React.FC<ResultModalProps> = ({
     date: new Date().toISOString(),
   };
 
+  const closecloseModal = () => {
+    closeModal();
+    window.location.reload();
+  };
+
   return (
     <ModalWrapper>
-      <ModalOverlay onClick={closeModal}></ModalOverlay>
+      <ModalOverlay onClick={closecloseModal}></ModalOverlay>
       <ModalContent>
-        <ModalCloseButton onClick={closeModal}>&times;</ModalCloseButton>
+        <ModalCloseButton onClick={closecloseModal}>&times;</ModalCloseButton>
         <div>
           <H2>WPM: {wordsPerMinute}</H2>
           <H2>CPM: {charsPerMinute}</H2>

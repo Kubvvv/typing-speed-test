@@ -37,6 +37,8 @@ const Input: React.FC<InputProps> = ({
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleSpace}
+        autoCapitalize="off"
+        autoCorrect="off"
       />
       <Cursor src={cursorSvg} />
       <LeftContainer>

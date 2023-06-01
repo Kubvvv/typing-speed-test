@@ -1,7 +1,27 @@
-export function millisToMinutesAndSeconds(millis: number) {
-  var minutes = Math.floor(millis / 60000);
-  var seconds: string = ((millis % 60000) / 1000).toFixed(0);
-  return Number(seconds) === 60
-    ? minutes + 1 + ":00"
-    : minutes + ":" + (Number(seconds) < 10 ? "0" : "") + seconds;
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "../config/firebase";
+
+export function formatTime(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return {
+    minutes: minutes.toString().padStart(2, "0"),
+    seconds: remainingSeconds.toString().padStart(2, "0"),
+  };
 }
+
+export interface Result {
+  WPM: number;
+  CPM: number;
+  Accuracy: number;
+  date: string;
+}
+
+export const addDesktopResultToFirestore = async (result: Result) => {
+  try {
+    const docRef = await addDoc(collection(db, "results-desktop"), result);
+    console.log("Document written with ID: ", docRef.id);
+  } catch (e) {
+    console.log(e);
+  }
+};

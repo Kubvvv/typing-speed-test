@@ -1,119 +1,75 @@
+import React from "react";
+import cursorSvg from "../assets/CursorSvg.svg";
+import { H4 } from "../App.style";
+import { TypedWord } from "../App";
 import {
-  EuiButton,
-  EuiButtonIcon,
-  EuiFieldText,
-  EuiFlexItem,
-  EuiIcon,
-  EuiText,
-} from "@elastic/eui";
-import React, { useEffect, useState } from "react";
+  InputContainer,
+  UserInput,
+  Cursor,
+  LeftContainer,
+  RightContainer,
+} from "../styles/Input.style";
 
 interface InputProps {
-  currentWord: string;
-  setMistake: React.Dispatch<React.SetStateAction<boolean>>;
-  handleNextWord: (mistake: boolean) => void;
-  timer?: string;
-  handleStartTimer: () => void;
+  text: string;
+  setText: React.Dispatch<React.SetStateAction<string>>;
+  mistake: boolean;
+  handleSpace: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  typedWords: TypedWord[];
+  remainingPart: string;
+  currentWordIndex: number;
+  words: string[];
 }
 
 const Input: React.FC<InputProps> = ({
-  currentWord,
-  setMistake,
-  handleNextWord,
-  timer,
-  handleStartTimer,
+  text,
+  setText,
+  handleSpace,
+  words,
+  typedWords,
+  remainingPart,
+  mistake,
+  currentWordIndex,
 }) => {
-  const [text, setText] = useState<string>("");
-
-  useEffect(() => {
-    if (text !== "") {
-      if (currentWord.startsWith(text)) {
-        setMistake(false);
-      } else {
-        setMistake(true);
-      }
-    }
-
-    if (text === "") {
-      setMistake(false);
-    }
-  }, [text]);
-
-  const [correctWords, setCorrectWords] = useState<number>(0);
-  const [wrongWords, setWrongWords] = useState<number>(0);
-
-  const handleSpace = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.keyCode === 32 && text.length > 0) {
-      console.log(text);
-      console.log(currentWord);
-      if (text === currentWord) {
-        setCorrectWords((w) => w + 1);
-        handleNextWord(false);
-      } else {
-        setWrongWords((w) => w + 1);
-        handleNextWord(true);
-      }
-
-      setText("");
-    }
-  };
-
-  useEffect(() => {
-    if (text === " ") {
-      setText("");
-      setMistake(false);
-    }
-  }, [text]);
-
-  const [isTimerVisible, setIsTimerVisible] = useState<boolean>(true);
-  const handleTimerClick = () => {
-    setIsTimerVisible((timer) => !timer);
-  };
-
-  useEffect(() => {
-    if (text.length > 0 && text !== " ") {
-      handleStartTimer();
-    }
-  }, [text]);
-
   return (
-    <>
-      <EuiFlexItem style={{ flexDirection: "row", gap: 20 }}>
-        <EuiText>Correct: {correctWords}</EuiText>
-        <EuiText>Wrong: {wrongWords}</EuiText>
-      </EuiFlexItem>
-
-      <EuiFlexItem
-        style={{
-          flexDirection: "row",
-          gap: 20,
-          width: 500,
-        }}
-      >
-        <EuiFieldText
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-          }}
-          onKeyDown={handleSpace}
-        />
-        <EuiFlexItem
+    <InputContainer>
+      <UserInput
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={handleSpace}
+      />
+      <Cursor src={cursorSvg} />
+      <LeftContainer>
+        {typedWords.map((word, index) => (
+          <H4
+            key={index}
+            style={{
+              color: "grey",
+              textDecoration: word.correct ? "none" : "line-through",
+              paddingRight: 5,
+            }}
+          >
+            {word.text}
+          </H4>
+        ))}
+        <H4
           style={{
-            justifyContent: "center",
-            alignItems: "center",
-            background: "#6a6161",
-            borderRadius: 5,
-            minWidth: 50,
+            color: "blue",
+            textDecoration: mistake ? "line-through" : "none",
           }}
-          onClick={handleTimerClick}
         >
-          {isTimerVisible ? timer : ""}
-        </EuiFlexItem>
-        <EuiButton onClick={() => alert("hej")}>
-          <EuiIcon type={"refresh"} size={"m"} />
-        </EuiButton>
-      </EuiFlexItem>
-    </>
+          {text}
+        </H4>
+      </LeftContainer>
+      <RightContainer>
+        <H4 style={{ paddingRight: 5 }}>{remainingPart}</H4>
+        {words.slice(currentWordIndex + 1).map((word, index) => (
+          <H4 style={{ paddingRight: 5 }} key={index}>
+            {word}
+          </H4>
+        ))}
+      </RightContainer>
+    </InputContainer>
   );
 };
 

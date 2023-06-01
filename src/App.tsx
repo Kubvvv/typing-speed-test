@@ -1,176 +1,168 @@
-import {
-  EuiButton,
-  EuiFieldNumber,
-  EuiFieldText,
-  EuiFlexGroup,
-  EuiFlexItem,
-  EuiLoadingSpinner,
-  EuiProvider,
-  EuiSelect,
-  EuiText,
-} from "@elastic/eui";
-import "@elastic/eui/dist/eui_theme_dark.css";
 import { useEffect, useState } from "react";
+import { MainContainer, ContentContainer } from "./App.style";
+import TimeAndStats from "./components/Statistics";
+import useFetchRandomWords from "./functions/useFetchRandomWords";
 import Input from "./components/Input";
-import Words from "./components/Words";
-import { millisToMinutesAndSeconds } from "./functions/functions";
+import Header from "./components/Header";
+import { formatTime } from "./functions/functions";
+import ResultModal from "./components/ResultModal";
 
 export interface WordState {
   word: string;
   state: "pending" | "fail" | "ok";
 }
 
+export interface TypedWord {
+  text: string;
+  correct: boolean;
+}
+
 function App() {
-  const [mistake, setMistake] = useState<boolean>(false);
+  const words = useFetchRandomWords();
 
-  const [words, setWords] = useState<WordState[]>([]);
+  //statistics
+  const [wordsPerMinute, setWordsPerMinute] = useState<number>(0);
+  const [charsPerMinute, setCharsPerMinute] = useState<number>(0);
+  const [accuracy, setAccuracy] = useState<number>(0);
 
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const [wordIndex, setWordIndex] = useState<number>(0);
+  const [text, setText] = useState<string>("");
+  const [typedWords, setTypedWords] = useState<TypedWord[]>([]);
+  const [remainingPart, setRemainingPart] = useState(words[0] || "");
+  const [currentWordIndex, setCurrentWordIndex] = useState<number>(0);
 
   useEffect(() => {
-    getWordsFromApi(100);
-  }, []);
+    setRemainingPart(words[0]);
+  }, [words]);
 
-  const getWordsFromApi = (wordsNumber: number) => {
-    fetch(`https://random-word-api.herokuapp.com/word?number=${wordsNumber}`)
-      .then((response) => response.json())
-      .then((data) => {
-        const tempWords: string[] = data;
-        const wordsArr = tempWords.map((item): WordState => {
-          return { word: item, state: "pending" };
-        });
-        setWords(wordsArr);
-        setLoading(false);
-        setTimer(millisToMinutesAndSeconds(selectedTime));
-      })
-      .catch((error) => console.log(error));
-  };
+  useEffect(() => {
+    if (typedWords.length > 0) {
+      const correctCount = typedWords.filter((item) => item.correct).length;
+      const totalCount = typedWords.length;
 
-  const handleStartClick = () => {
-    getWordsFromApi(100);
-  };
+      const accuracy = correctCount / totalCount;
 
-  const handleButtonClick = () => {
-    // setStart(!start);
-    setLoading(true);
-  };
+      const accuracyPercentage = accuracy * 100;
 
-  const [timer, setTimer] = useState<string>();
+      setAccuracy(Math.round(accuracyPercentage));
+    }
+  }, [typedWords]);
 
-  function setTimeInterval(time: number) {
-    setTestStarted(true);
-    let timeLeft = time;
-    const interval = setInterval(function () {
-      timeLeft = timeLeft - 1000;
-      const czas = millisToMinutesAndSeconds(timeLeft);
-      setTimer(czas);
+  const [shouldRunEffect, setShouldRunEffect] = useState<boolean>(true);
+  const [mistake, setMistake] = useState<boolean>(false);
 
-      if (timeLeft <= time - 10000) {
-        clearInterval(interval);
-        alert("finish!");
+  useEffect(() => {
+    //starts timer if user typed something
+    if (!hasStarted && text.length > 0) {
+      setHasStarted(true);
+    }
+
+    if (!shouldRunEffect) return;
+
+    if (text.length > 0)
+      if (words[currentWordIndex].startsWith(text)) {
+        setMistake(false);
+        setRemainingPart(remainingPart.substring(1));
+      } else {
+        setMistake(true);
       }
-    }, 1000);
+
+    if (text === " ") {
+      setText("");
+      setMistake(false);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, shouldRunEffect]);
+
+  const handleSpace = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === " " && text.length > 0) {
+      const isCorrect = words[currentWordIndex] === text;
+      setTypedWords([...typedWords, { text: text, correct: isCorrect }]);
+
+      if (isCorrect) {
+        setWordsPerMinute(wordsPerMinute + 1);
+        setCharsPerMinute(charsPerMinute + text.length);
+      }
+
+      setText("");
+      setCurrentWordIndex((prevIndex) => prevIndex + 1);
+
+      if (currentWordIndex < words.length - 1) {
+        setRemainingPart(words[currentWordIndex + 1]);
+      }
+    } else if (e.key === "Backspace" && text.length > 0) {
+      setShouldRunEffect(false);
+      const lastLetter = text[text.length - 1];
+      const newWord = lastLetter + remainingPart;
+      if (words[currentWordIndex].startsWith(text)) {
+        setRemainingPart(newWord);
+      }
+    } else {
+      setShouldRunEffect(true);
+    }
+  };
+
+  //timer logic
+
+  const [timeLeft, setTimeLeft] = useState<number>(60);
+  const [hasStarted, setHasStarted] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (hasStarted && timeLeft > 0) {
+      const timerId = setTimeout(() => {
+        setTimeLeft(timeLeft - 1);
+      }, 1000);
+
+      return () => clearTimeout(timerId);
+    } else if (timeLeft === 0) {
+      openResultModal();
+    }
+  }, [timeLeft, hasStarted]);
+
+  const { minutes, seconds } = formatTime(timeLeft);
+
+  //result logic
+  const [isResultModalVisible, setIsResultModalVisible] =
+    useState<boolean>(false);
+  const openResultModal = () => setIsResultModalVisible(true);
+  const closeResultModal = () => setIsResultModalVisible(false);
+
+  let resultModal;
+  if (isResultModalVisible) {
+    resultModal = (
+      <ResultModal
+        closeModal={closeResultModal}
+        wordsPerMinute={wordsPerMinute}
+        charsPerMinute={charsPerMinute}
+        accuracy={accuracy}
+      />
+    );
   }
 
-  const [testStarted, setTestStarted] = useState<boolean>(false);
-
-  //select logic
-  const [selectedTime, setSelectedTime] = useState<number>(60000);
-  const optionValues = [60000, 120000, 180000];
-  const selectOptions = optionValues.map((time) => {
-    return { value: time, text: millisToMinutesAndSeconds(time) };
-  });
-
-  const handleNextWord = (mistake: boolean) => {
-    const wordsArr = [...words];
-
-    if (mistake) {
-      words[wordIndex].state = "fail";
-    } else {
-      words[wordIndex].state = "ok";
-    }
-    setWords(wordsArr);
-
-    setWordIndex((w) => w + 1);
-  };
-
-  const handleStartTimer = () => {
-    if (!testStarted) {
-      setTestStarted(true);
-      setTimeInterval(selectedTime);
-    }
-  };
-
-  const handleResetTimer = () => {
-    setTestStarted(false);
-  };
-
   return (
-    <EuiProvider colorMode="dark">
-      <EuiFlexGroup
-        css={{
-          display: "flex",
-          width: "100%",
-          minHeight: 800,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <EuiFlexItem
-          id={"title"}
-          css={{
-            width: "60%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-            gap: 20,
-          }}
-        >
-          <EuiText css={{ color: "black" }}>How much time?</EuiText>
-          <div>
-            <EuiSelect
-              css={{ maxWidth: 100 }}
-              options={selectOptions}
-              value={selectedTime}
-              onChange={(e) => setSelectedTime(Number(e.target.value))}
-            />
-          </div>
+    <MainContainer>
+      {resultModal}
+      <ContentContainer>
+        <Header minutes={minutes} seconds={seconds} />
 
-          <>
-            {loading && words.length > 0 ? (
-              <EuiLoadingSpinner size="m" />
-            ) : (
-              <>
-                {words.length && (
-                  <>
-                    <Words
-                      words={words}
-                      wordIndex={wordIndex}
-                      mistake={mistake}
-                    />
+        <TimeAndStats
+          wordsPerMinute={wordsPerMinute}
+          charsPerMinute={charsPerMinute}
+          accuracy={accuracy}
+        />
 
-                    <Input
-                      currentWord={words[wordIndex].word}
-                      setMistake={setMistake}
-                      handleNextWord={handleNextWord}
-                      timer={timer}
-                      handleStartTimer={handleStartTimer}
-                    />
-                  </>
-                )}
-
-                {timer}
-
-                {/* <EuiButton onClick={handleRestartTest}>Restart</EuiButton> */}
-              </>
-            )}
-          </>
-        </EuiFlexItem>
-      </EuiFlexGroup>
-    </EuiProvider>
+        <Input
+          text={text}
+          setText={setText}
+          handleSpace={handleSpace}
+          words={words}
+          typedWords={typedWords}
+          remainingPart={remainingPart}
+          mistake={mistake}
+          currentWordIndex={currentWordIndex}
+        />
+      </ContentContainer>
+    </MainContainer>
   );
 }
 

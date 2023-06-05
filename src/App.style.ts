@@ -13,7 +13,7 @@ export const ColorAdditional = "#383838";
 
 export const H1 = styled.h1`
   font-family: "Montserrat", sans-serif;
-  font-size: ${between("36px", "54px", "320px", "640px")};
+  font-size: ${between("32px", "54px", "320px", "640px")};
   font-weight: 800;
 
   @media (min-width: 640px) {
@@ -60,18 +60,26 @@ export const H5 = styled.h5`
 
 export const H6 = styled.h6`
   font-family: "Montserrat", sans-serif;
-  font-size: 12px;
+  font-size: ${between("10px", "11px", "320px", "640px")};
   font-weight: 400;
+  margin: 0;
+
+  @media (max-width: 640px) {
+    font-size: 10px;
+  }
 `;
 
 //containers
 
 export const MainContainer = styled.div`
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
 
   display: flex;
-  background: #ebebeb;
+
+  padding-bottom: 100px;
+  background: white;
+
   justify-content: center;
 `;
 

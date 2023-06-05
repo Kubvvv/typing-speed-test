@@ -6,6 +6,8 @@ import Input from "./components/Input";
 import Header from "./components/Header";
 import { formatTime } from "./functions/functions";
 import ResultModal from "./components/ResultModal";
+import ScoreBoard from "./components/ScoreBoard";
+import Loading from "./components/Loading";
 
 export interface WordState {
   word: string;
@@ -75,7 +77,7 @@ function App() {
   }, [text, shouldRunEffect]);
 
   const handleSpace = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === " " && text.length > 0) {
+    if (e.key == " " && text.length > 0) {
       const isCorrect = words[currentWordIndex] === text;
       setTypedWords([...typedWords, { text: text, correct: isCorrect }]);
 
@@ -90,7 +92,7 @@ function App() {
       if (currentWordIndex < words.length - 1) {
         setRemainingPart(words[currentWordIndex + 1]);
       }
-    } else if (e.key === "Backspace" && text.length > 0) {
+    } else if (e.key == "Backspace" && text.length > 0) {
       setShouldRunEffect(false);
       const lastLetter = text[text.length - 1];
       const newWord = lastLetter + remainingPart;
@@ -125,7 +127,10 @@ function App() {
   const [isResultModalVisible, setIsResultModalVisible] =
     useState<boolean>(false);
   const openResultModal = () => setIsResultModalVisible(true);
-  const closeResultModal = () => setIsResultModalVisible(false);
+  const closeResultModal = () => {
+    setIsResultModalVisible(false);
+    window.location.reload();
+  };
 
   let resultModal;
   if (isResultModalVisible) {
@@ -142,26 +147,32 @@ function App() {
   return (
     <MainContainer>
       {resultModal}
-      <ContentContainer>
-        <Header minutes={minutes} seconds={seconds} />
+      {words.length === 0 ? (
+        <Loading />
+      ) : (
+        <ContentContainer>
+          <Header minutes={minutes} seconds={seconds} />
 
-        <TimeAndStats
-          wordsPerMinute={wordsPerMinute}
-          charsPerMinute={charsPerMinute}
-          accuracy={accuracy}
-        />
+          <TimeAndStats
+            wordsPerMinute={wordsPerMinute}
+            charsPerMinute={charsPerMinute}
+            accuracy={accuracy}
+          />
 
-        <Input
-          text={text}
-          setText={setText}
-          handleSpace={handleSpace}
-          words={words}
-          typedWords={typedWords}
-          remainingPart={remainingPart}
-          mistake={mistake}
-          currentWordIndex={currentWordIndex}
-        />
-      </ContentContainer>
+          <Input
+            text={text}
+            setText={setText}
+            handleSpace={handleSpace}
+            words={words}
+            typedWords={typedWords}
+            remainingPart={remainingPart}
+            mistake={mistake}
+            currentWordIndex={currentWordIndex}
+          />
+
+          <ScoreBoard />
+        </ContentContainer>
+      )}
     </MainContainer>
   );
 }

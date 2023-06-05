@@ -39,6 +39,7 @@ const Input: React.FC<InputProps> = ({
         onKeyDown={handleSpace}
         autoCapitalize="off"
         autoCorrect="off"
+        autoFocus
       />
       <Cursor src={cursorSvg} />
       <LeftContainer>

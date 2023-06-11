@@ -34,6 +34,7 @@ const Input: React.FC<InputProps> = ({
   return (
     <InputContainer>
       <UserInput
+        type="text"
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleSpace}

@@ -13,8 +13,12 @@ export const InputContainer = styled.div`
   position: relative;
   overflow: hidden;
 
+  background: white;
+
   border: 2px solid black;
   border-radius: 20px;
+
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 60px 40px -7px;
 `;
 
 export const UserInput = styled.input`

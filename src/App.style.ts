@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { between } from "polished";
+import background from "./assets/background3.png";
 
 //colors
 
@@ -81,6 +82,12 @@ export const MainContainer = styled.div`
   background: white;
 
   justify-content: center;
+
+  background-image: url(${background});
+  background-attachment: fixed;
+  /* background-position: center; */
+  background-repeat: no-repeat;
+  background-size: cover;
 `;
 
 export const ContentContainer = styled.div`
